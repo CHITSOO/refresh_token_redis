@@ -149,7 +149,7 @@ public class UserControllerTest extends MyRestDoc {
         System.out.println("테스트 : " + responseBody);
 
         // then
-        String jwtToken = resultActions.andReturn().getResponse().getHeader(MyJwtProvider.HEADER);
+        String jwtToken = resultActions.andReturn().getResponse().getHeader(MyJwtProvider.HEADER_ACCESS);
         Assertions.assertThat(jwtToken.startsWith(MyJwtProvider.TOKEN_PREFIX)).isTrue();
         resultActions.andExpect(status().isOk());
         resultActions.andDo(MockMvcResultHandlers.print()).andDo(document);

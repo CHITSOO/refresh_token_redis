@@ -1,6 +1,7 @@
 package shop.mtcoding.restend.core.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,13 +15,21 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import shop.mtcoding.restend.core.auth.jwt.MyJwtAuthorizationFilter;
+import shop.mtcoding.restend.core.auth.jwt.MyJwtProvider;
 import shop.mtcoding.restend.core.exception.Exception401;
 import shop.mtcoding.restend.core.exception.Exception403;
 import shop.mtcoding.restend.core.util.MyFilterResponseUtil;
+import shop.mtcoding.restend.core.util.RedisUtil;
 
 @Slf4j
 @Configuration
 public class MySecurityConfig {
+
+    private final RedisUtil redisUtil;
+
+    public MySecurityConfig(RedisUtil redisUtil) {
+        this.redisUtil = redisUtil;
+    }
 
     @Bean
     BCryptPasswordEncoder passwordEncoder(){
@@ -37,7 +46,7 @@ public class MySecurityConfig {
         @Override
         public void configure(HttpSecurity builder) throws Exception {
             AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
-            builder.addFilter(new MyJwtAuthorizationFilter(authenticationManager));
+            builder.addFilter(new MyJwtAuthorizationFilter(redisUtil, authenticationManager));
             // 시큐리티 관련 필터
             super.configure(builder);
         }
@@ -97,6 +106,7 @@ public class MySecurityConfig {
         configuration.addAllowedOriginPattern("*"); // 모든 IP 주소 허용 (프론트 앤드 IP만 허용 react)
         configuration.setAllowCredentials(true); // 클라이언트에서 쿠키 요청 허용
         configuration.addExposedHeader("Authorization"); // 옛날에는 디폴트 였다. 지금은 아닙니다.
+        configuration.addExposedHeader("RefreshToken");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

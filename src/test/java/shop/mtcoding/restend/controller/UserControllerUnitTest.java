@@ -1,6 +1,7 @@
 package shop.mtcoding.restend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.util.Pair;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -94,7 +95,7 @@ public class UserControllerUnitTest extends DummyEntity {
         String requestBody = om.writeValueAsString(loginInDTO);
 
         // stub
-        Mockito.when(userService.로그인(any())).thenReturn("Bearer 1234");
+        Mockito.when(userService.로그인(any())).thenReturn(Pair.of("Bearer 1234", "Bearer 1234"));
 
         // when
         ResultActions resultActions = mvc
@@ -103,7 +104,7 @@ public class UserControllerUnitTest extends DummyEntity {
         System.out.println("테스트 : " + responseBody);
 
         // then
-        String jwtToken = resultActions.andReturn().getResponse().getHeader(MyJwtProvider.HEADER);
+        String jwtToken = resultActions.andReturn().getResponse().getHeader(MyJwtProvider.HEADER_ACCESS);
         Assertions.assertThat(jwtToken.startsWith(MyJwtProvider.TOKEN_PREFIX)).isTrue();
         resultActions.andExpect(status().isOk());
     }

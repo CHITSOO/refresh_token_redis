@@ -1,5 +1,6 @@
 package shop.mtcoding.restend.service;
 
+import com.nimbusds.jose.util.Pair;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -93,11 +94,11 @@ public class UserServiceTest extends DummyEntity {
         Mockito.when(authenticationManager.authenticate(any())).thenReturn(authentication);
 
         // when
-        String jwt = userService.로그인(loginInDTO);
-        System.out.println("디버그 : "+jwt);
+        Pair<String, String> jwt = userService.로그인(loginInDTO);
+        System.out.println("디버그 : "+jwt.getLeft());
 
         // then
-        Assertions.assertThat(jwt.startsWith("Bearer ")).isTrue();
+        Assertions.assertThat(jwt.getLeft().startsWith("Bearer ")).isTrue();
     }
 
     @Test

@@ -1,7 +1,7 @@
 package shop.mtcoding.restend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.util.Pair;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +17,7 @@ import shop.mtcoding.restend.dto.user.UserRequest;
 import shop.mtcoding.restend.dto.user.UserResponse;
 import shop.mtcoding.restend.service.UserService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 @RequiredArgsConstructor
@@ -34,13 +35,39 @@ public class UserController {
         return ResponseEntity.ok(responseDTO);
     }
 
+    // 로그인 성공시 access 토큰과 refresh 토큰 둘 다 제공.
+    @MyErrorLog
+    @MyLog
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserRequest.LoginInDTO loginInDTO){
-        String jwt = userService.로그인(loginInDTO);
+        Pair<String, String> tokens = userService.로그인(loginInDTO);
         ResponseDTO<?> responseDTO = new ResponseDTO<>();
-        return ResponseEntity.ok().header(MyJwtProvider.HEADER, jwt).body(responseDTO);
+        return ResponseEntity.ok()
+                .header(MyJwtProvider.HEADER_ACCESS, tokens.getLeft())
+                .header(MyJwtProvider.HEADER_REFRESH, tokens.getRight())
+                .body(responseDTO);
     }
 
+    // AccessToken, RefreshToken 재발급을 위한 API
+    @MyErrorLog
+    @MyLog
+    @PostMapping("/reissue")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+        Pair<String, String> tokens = userService.RTR토큰재발급(request);
+        return ResponseEntity.ok()
+                .header(MyJwtProvider.HEADER_ACCESS, tokens.getLeft())
+                .header(MyJwtProvider.HEADER_REFRESH, tokens.getRight())
+                .build();
+    }
+
+    @PostMapping("/auth/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request){
+        userService.로그아웃(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @MyErrorLog
+    @MyLog
     @GetMapping("/s/user/{id}")
     public ResponseEntity<?> detail(@PathVariable Long id, @AuthenticationPrincipal MyUserDetails myUserDetails) throws JsonProcessingException {
         if(id.longValue() != myUserDetails.getUser().getId()){
